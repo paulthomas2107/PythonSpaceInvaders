@@ -1,6 +1,7 @@
 import math
-import pygame
 import random
+import pygame
+from pygame import mixer
 
 # Init engine
 pygame.init()
@@ -10,6 +11,10 @@ screen = pygame.display.set_mode((800, 600))
 
 # Background image
 background = pygame.image.load('background.png')
+
+# Background music
+mixer.music.load("background.wav")
+mixer.music.play(-1)
 
 # Title and Icon
 pygame.display.set_caption("Python Invaders")
@@ -50,6 +55,7 @@ score_value = 0
 font = pygame.font.Font('SpaceOutOpen.ttf', 32)
 textX = 10
 textY = 10
+game_over_font = pygame.font.Font('SpaceOutOpen.ttf', 96)
 
 
 def show_score(x, y):
@@ -84,6 +90,11 @@ def isCollision(enemyX, enemyY, bulletX, bulletY):
         return False
 
 
+def game_over_text():
+    over_text = game_over_font.render("GAME OVER...", True, (255, 255, 255))
+    screen.blit(over_text, (100, 200))
+
+
 #  Game Loop
 running = True
 while running:
@@ -105,6 +116,8 @@ while running:
                 playerX_change = 5
             if event.key == pygame.K_SPACE:
                 if bullet_state == "ready":
+                    bullet_sound = mixer.Sound('laser.wav')
+                    bullet_sound.play()
                     bulletX = playerX
                     fire_bullet(bulletX, bulletY)
         if event.type == pygame.KEYUP:
@@ -121,6 +134,13 @@ while running:
 
     # Enemy movement
     for i in range(num_of_enemies):
+        # Game over
+        if enemyY[i] > 440:
+            for j in range(num_of_enemies):
+                enemyY[i] = 2000
+            game_over_text()
+            break
+
         enemyX[i] += enemyX_change[i]
         if enemyX[i] <= 0:
             enemyX_change[i] = 2
@@ -132,6 +152,8 @@ while running:
         # Collision
         collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
         if collision:
+            explosion_sound = mixer.Sound('explosion.wav')
+            explosion_sound.play()
             bulletY = 480
             bullet_state = "ready"
             score_value += 1
